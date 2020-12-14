@@ -1,7 +1,8 @@
 BLACK = 1
 X = 0
 UNKNOWN = -1
-import copy
+
+import ex8_helper
 
 
 def constraint_satisfactions(n, blocks):
@@ -10,6 +11,7 @@ def constraint_satisfactions(n, blocks):
     solution_array = []
     _helper_constraint_satisfactions(solution_base, 0, blocks, 0, solution_array)
     return solution_array
+
 
 def _helper_constraint_satisfactions(current_array, ind_arr, blocks, ind_b, solution_array):
     current_array_copy = current_array[:]
@@ -36,49 +38,53 @@ def _helper_constraint_satisfactions(current_array, ind_arr, blocks, ind_b, solu
                 current_array_copy[ind_arr + blocks[ind_b]] = 0
             _helper_constraint_satisfactions(current_array_copy, ind_arr + blocks[ind_b] + 1, blocks, ind_b + 1,
                                              solution_array)
-            
-            
 
 
 def row_variations(row, blocks):
-    solution_array = []
-    _helper_row_variations(row, 0, blocks, 0, solution_array)
-    return solution_array
+    solution = []
+    _helper_row_variations(row, 0, blocks, [], solution)
+    return solution
 
-def _helper_row_variations(row, ind_row, blocks, ind_b, solution_array):
-    row_copy = row[:]
-    if ind_b >= len(blocks):
-        for j in range(ind_row, len(row_copy)):
-            #if row_copy[j] == -1:
-                row_copy[j] = 0
-        solution_array.append(row_copy)
+def _helper_row_variations(row, ind_row, blocks, suspect, solution_array):
+
+    if len(suspect) == len(row) and is_valid_row(suspect, blocks):
+        suspect_copy = suspect[:]
+        solution_array.append(suspect_copy)
         return
-    elif ind_row >= len(row_copy):
+
+    if ind_row >= len(row):
         return
-    else:
-        if row_copy[ind_row] == -1:
-            row_copy[ind_row] = 0
-        _helper_row_variations(row_copy, ind_row + 1, blocks, ind_b, solution_array)
-        if blocks[ind_b] > len(row_copy) - ind_row:
-            return
-        else:
-            if row_copy[ind_row] == 1 and is_valid_row(row_copy,ind_row, blocks[ind_b]):
-                # [1,1,-1,0], [0]->3 : [1,-1,0],2:[-1,0]: 1
-                for j in range(ind_row, blocks[ind_b] + ind_row):
-                    row_copy[j] = 1
-            if ind_row + blocks[ind_b] < len(row_copy):
-                row_copy[ind_row + blocks[ind_b]] = 0
-            _helper_row_variations(row_copy, ind_row + blocks[ind_b] + 1, blocks, ind_b + 1, solution_array)
+
+    if row[ind_row] == 0 or row[ind_row] == 1:
+        suspect.append(row[ind_row])
+        _helper_row_variations(row, ind_row + 1, blocks, suspect, solution_array)
+        suspect.pop()
+        return
+
+    if row[ind_row] == -1:
+        for option in [0, 1]:
+            suspect.append(option)
+            _helper_row_variations(row, ind_row + 1, blocks, suspect, solution_array)
+            suspect.pop()
+        return
 
 
-
-def is_valid_row(row,ind_row, block):
-    if block == 0:
-        return True
+def is_valid_row(row, blocks):
+    """this function gets suspect for valid row and return true or false"""
+    str_row = ""
     for i in range(len(row)):
-        if row[i] == 0:
+        str_row += str(row[i])
+    str_row_no_zero = str_row.split("0")
+    index = 0
+
+    for block in str_row_no_zero:
+        if block == "":
+            continue
+        elif index < len(blocks):
+            if block.count("1") == blocks[index]:
+                index += 1
+            else:
+                return False
+        else:
             return False
-    is_valid_row(row[ind_row:],ind_row+1,block-1)
-
-
-print(row_variations([1,1,-1,0],[3]))
+    return len(blocks) == index
