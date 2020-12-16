@@ -124,7 +124,7 @@ def intersection_row(rows):
 
 def solve_easy_nonogram(constraints):
     board = get_board(constraints)
-    _helper_solve_easy_nonogram(board, constraints)
+    board = _helper_solve_easy_nonogram(board, constraints)
     return board
 
 
@@ -132,62 +132,41 @@ def _helper_solve_easy_nonogram(board, constraints):
     if not board:
         return None
 
-    temp_board = board[:]
-    for i in range(len(board)):
-        # row_copy = board[i][:]
-        board[:] = update_board_row(i, board, constraints[0][i])
-    for j in range(len(board[0])):
-        board[:] = update_board_col(j, board, constraints[1][j])
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(board)):
+            row_copy = board[i][:]
+            board, new_row = update_board_row(i, board, constraints[0][i])
+            changed = changed or (row_copy != new_row)
+        for j in range(len(board[0])):
+            col_copy = [x[j] for x in board]
+            board, new_col = update_board_col(j, board, constraints[1][j])
+            changed = changed or (col_copy != new_col)
+    return board
 
-    if temp_board != board:
-        _helper_solve_easy_nonogram(board, constraints)
-    else:
-        return None
 
-    # TODO
-
-
-#
-# def _helper_solve_easy_nonogram(board,constraints,ind_row,ind_col):
-#
-#     if not board:
-#         return None
-#
-#     temp_board = board[:]
-#
-#     board[:] = update_board_row(ind_row , board,constraints[0][ind_row])
-#     board[:] = update_board_col(ind_col, board, constraints[1][ind_col])
-#     if temp_board != board:
-#         _helper_solve_easy_nonogram(temp_board, constraints,ind_row+1,ind_col)
-#         _helper_solve_easy_nonogram(temp_board, constraints,ind_row,ind_col+1)
-#     else:
-#         return None
-
+    # TODO what is means contridiction and how to implement it
 
 def update_board_row(row_index, board, constraint):
     if UNKNOWN not in board[row_index]:
-        return board
-    #
-    # count = board[row_index].count(UNKNOWN)
-    # if count > constraint[0] * 2:
-    #     return board
-
+        return board, board[row_index]
     else:
         row_variation = row_variations(board[row_index], constraint)
         board[row_index] = intersection_row(row_variation)
-    return board
+    return board, board[row_index]
 
 
 def update_board_col(col_index, board, constraint):
     cols_matrix = [list(x) for x in zip(*board)]
     if UNKNOWN not in cols_matrix[col_index]:
         board = [list(x) for x in zip(*cols_matrix)]
-        return board
+        return board, cols_matrix[col_index]
     else:
         cols_matrix[col_index] = intersection_row(row_variations(cols_matrix[col_index], constraint))
     board = [list(x) for x in zip(*cols_matrix)]
 
-    return board
+    return board, cols_matrix[col_index]
 
 
 def get_board(constraints):
@@ -223,17 +202,17 @@ temp = [[[1, 1], [2, 1], [4, 1], [6, 1], [1, 4], [9], [3, 3], [1, 4], [3], [5], 
          [1, 1, 1, 1, 1]]]
 
 # TODO: Put solution board in `board` variable
-board = solve_easy_nonogram(my_constraints_3)
+test_board = solve_easy_nonogram(my_constraint_4)
 
 # Unknown cells will be painted in grey,
 # Filled cells in black and empty cells in white
-for row in board:
+for row in test_board:
     for col_idx in range(0, len(row)):
         if row[col_idx] == -1:
             row[col_idx] = 1
         elif row[col_idx] == 1:
             row[col_idx] = 3
 
-arr = numpy.array([numpy.array(row) for row in board])
+arr = numpy.array([numpy.array(row) for row in test_board])
 plt.matshow(arr, cmap='Greys')
 plt.show()
