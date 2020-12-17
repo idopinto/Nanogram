@@ -81,6 +81,7 @@ def _helper_row_variations(row, ind_row, blocks, ind_b, solution_array):
             _helper_row_variations(row_copy, ind_row + blocks[ind_b], blocks, ind_b + 1, solution_array)
         else:
             return
+        #fasdg
 
 
 def try_to_put_block(row, index_row, block_size):
