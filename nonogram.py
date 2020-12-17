@@ -3,9 +3,11 @@ X = 0
 UNKNOWN = -1
 import numpy
 import matplotlib.pyplot as plt
+import time
 
-
-# TODO מתי אפשר לפסול ומתי אפשר לגמור בשיר מזמור
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~PART I~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def constraint_satisfactions(n, blocks):
     solution_base = [UNKNOWN for i in range(n)]
 
@@ -41,71 +43,61 @@ def _helper_constraint_satisfactions(current_array, ind_arr, blocks, ind_b, solu
                                              solution_array)
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~PART II~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 def row_variations(row, blocks):
-    solution = []
-    _helper_row_variations(row, 0, blocks, [], solution)
-    return solution
+    solution_array = []
+    _helper_row_variations(row, 0, blocks, 0, solution_array)
+    return solution_array
 
 
-def _helper_row_variations(row, ind_row, blocks, suspect, solution_array):
-    if len(suspect) == len(row) and is_valid_row(suspect, blocks):
-        suspect_copy = suspect[:]
-        solution_array.append(suspect_copy)
+def _helper_row_variations(row, ind_row, blocks, ind_b, solution_array):
+    if ind_b >= len(blocks):
+        for i in range(ind_row, len(row)):
+            if row[i] == -1:
+                row[i] = 0
+            if row[i] == 1:
+                return
+        solution_array.append(row)
         return
 
-    if ind_row >= len(row):
+    elif ind_row >= len(row):
         return
-
-    if row[ind_row] == 0 or row[ind_row] == 1:
-        suspect.append(row[ind_row])
-        _helper_row_variations(row, ind_row + 1, blocks, suspect, solution_array)
-        suspect.pop()
-        return
-
-    if row[ind_row] == -1:
-        for option in [0, 1]:
-            suspect.append(option)
-            _helper_row_variations(row, ind_row + 1, blocks, suspect, solution_array)
-            suspect.pop()
-        return
-
-
-def is_valid_row(row, blocks):
-    """this function gets suspect for valid row and return true or false"""
-    str_row = ""
-    for i in range(len(row)):
-        str_row += str(row[i])
-    str_row_no_zero = str_row.split("0")
-    index = 0
-
-    for block in str_row_no_zero:
-        if block == "":
-            continue
-        elif index < len(blocks):
-            if block.count("1") == blocks[index]:
-                index += 1
-            else:
-                return False
+    row_copy = row[:]
+    if row_copy[ind_row] == 0:
+        _helper_row_variations(row_copy, ind_row + 1, blocks, ind_b, solution_array)
+    if row_copy[ind_row] == 1:
+        if try_to_put_block(row_copy, ind_row, blocks[ind_b]):
+            _helper_row_variations(row_copy, ind_row + blocks[ind_b], blocks, ind_b + 1, solution_array)
         else:
+            return
+    if row_copy[ind_row] == -1:
+        row_copy[ind_row] = 0
+        _helper_row_variations(row_copy, ind_row + 1, blocks, ind_b, solution_array)
+        row_copy[ind_row] = 1
+        if try_to_put_block(row_copy, ind_row, blocks[ind_b]):
+            _helper_row_variations(row_copy, ind_row + blocks[ind_b], blocks, ind_b + 1, solution_array)
+        else:
+            return
+
+
+def try_to_put_block(row, index_row, block_size):
+    for j in range(index_row, index_row + block_size):
+        if j >= len(row):
             return False
-    return len(blocks) == index
-
-
-def intersection_row(rows):
-    """
-    """
-    intersection = []
-    # [[0, 0, 1], [0, 1, 1], [0, 0, 1]]) -> [0, -1, 1]
-    if len(rows) > 0:
-        for i in range(len(rows[0])):
-            temp_cell = rows[0][i]
-            if temp_cell != UNKNOWN:
-                for j in range(1, len(rows)):
-                    if rows[j][i] != temp_cell:
-                        temp_cell = UNKNOWN
-                        break
-            intersection.append(temp_cell)
-    return intersection
+        if row[j] == 0:
+            return False
+        elif row[j] == -1:
+            row[j] = 1
+    if index_row + block_size == len(row):
+        return True
+    elif row[index_row + block_size] == 1:
+        return False
+    elif row[index_row + block_size] == -1:
+        row[index_row + block_size] = 0
+    return True
 
 
 def intersection_row(rows):
@@ -120,6 +112,10 @@ def intersection_row(rows):
             row_option.append(UNKNOWN)
 
     return row_option
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~PART III~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
 def solve_easy_nonogram(constraints):
@@ -145,8 +141,8 @@ def _helper_solve_easy_nonogram(board, constraints):
             changed = changed or (col_copy != new_col)
     return board
 
-
     # TODO what is means contridiction and how to implement it
+
 
 def update_board_row(row_index, board, constraint):
     if UNKNOWN not in board[row_index]:
@@ -175,34 +171,42 @@ def get_board(constraints):
     return board
 
 
-my_constraints = [[[3], [5], [5], [3], [1], [1], [1, 1]], [[2, 1], [4], [7], [4], [2]]]
-my_constraints_2 = [[[1, 3, 3], [3, 1, 2], [1, 3], [2, 1], [1, 2], [2, 1], [1, 3], [4, 1, 2], [1, 3, 3]],
-                    [[1, 1, 3], [1, 1], [3, 3], [3, 3], [1, 1, 1, 1], [1, 1, 1], [1, 1], [1, 3, 1], [2, 1, 2],
-                     [2, 1, 1, 2]]]
-my_constraint_4 = [[[5, 2], [1, 1, 4], [1, 2, 3, 2], [4, 1, 3, 3, 2], [1, 2, 3, 5], [4, 4], [7]],
-                   [[4], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1], [4], [1, 3], [1, 1, 2], [2, 2, 1], [2, 2, 1],
-                    [2, 1, 1], [1, 2], [5], [3], [3], [1], [2], [2], [1]]]
-my_constraints_3 = [
-    [[2], [2, 1], [1, 3], [1, 1, 1, 1], [1, 1, 5], [1, 1, 1, 1, 1, 1], [1, 1, 1, 2, 1], [1, 1, 1, 1], [1, 1, 4, 3],
-     [4, 3, 2], [1, 1, 1, 1, 1], [7, 2, 1], [1, 1, 1, 1, 3], [1, 1, 1, 1, 1, 1],
-     [1, 1, 5, 3],
-     [1, 1, 5, 1, 1], [1, 1, 2, 2, 1, 1],
-     [1, 1, 2, 2, 1, 1], [1, 1, 1, 1, 5],
-     [1, 1, 2, 2, 1, 1]],
-    [[1, 2], [6, 9], [1, 1], [16], [1, 1, 1],
-     [1, 7, 1],
-     [2, 1, 2, 6], [2, 2, 2], [1, 2, 2, 6],
-     [1, 1, 1, 1, 6, 1], [2, 3, 2, 1, 1],
-     [1, 1, 1, 2, 10], [4, 2, 2, 1, 1, 1], [11],
-     [1]]]
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~PART IV~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-temp = [[[1, 1], [2, 1], [4, 1], [6, 1], [1, 4], [9], [3, 3], [1, 4], [3], [5], [5], [6], [5], [4], [6], [2, 3], [3, 1],
-         [2, 2], [4, 1], [2, 2], [5], [3]],
-        [[1], [3, 3], [4, 5], [2, 1, 4, 2, 2], [6, 7, 1, 2], [5, 9, 2], [1, 13, 4], [1, 10, 2], [1, 7, 3],
-         [1, 1, 1, 1, 1]]]
+def _helper_solve_nonogram():
+    pass
 
-# TODO: Put solution board in `board` variable
-test_board = solve_easy_nonogram(my_constraint_4)
+# def solve_nonogram(constraints):
+#
+#     solved = False
+#     results = []
+#     while not solved:
+#         result = solve_easy_nonogram(constraints)
+#
+#         results.append(result)
+
+
+
+
+
+
+
+
+
+
+start = time.time()
+testing = [[[1, 1, 1, 1, 2, 1, 1, 1, 1], [2], [1, 1, 1, 1, 2, 1, 1, 1, 1],
+       [1, 1, 1, 6, 1, 1, 1], [1, 1, 1, 2, 1, 1, 1],
+       [1, 1, 10, 1, 1],
+       [1, 1, 2, 1, 1], [1, 14, 1], [1, 2, 1], [18], [2], [1, 2],
+       [5, 2, 1], [3, 4, 5], [1, 6, 3], [8, 1]],
+      [[1, 8, 1], [1, 2], [1, 6, 1, 4], [1, 1, 2], [1, 4, 1, 1, 1],
+       [1, 1, 1, 1], [1, 2, 1, 1, 1, 2], [1, 1, 1, 1, 3], [16], [16],
+       [1, 1, 1, 1, 3], [1, 2, 1, 1, 1, 2], [1, 1, 1, 1],
+       [1, 4, 1, 1, 1], [1, 1, 2], [1, 6, 1, 4], [1, 2], [1, 8, 1]]]
+test_board = solve_easy_nonogram(testing)
 
 # Unknown cells will be painted in grey,
 # Filled cells in black and empty cells in white
@@ -216,3 +220,6 @@ for row in test_board:
 arr = numpy.array([numpy.array(row) for row in test_board])
 plt.matshow(arr, cmap='Greys')
 plt.show()
+end = time.time()
+print(end - start)
+
